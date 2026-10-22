@@ -6,21 +6,32 @@
   <title>SDP Campus Coach</title>
 
   <style>
+    :root {
+      --teal: #0f766e;
+      --ink: #172033;
+      --muted: #64748b;
+      --bg: #f4f7fb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f7fb;
-      color: #172033;
       margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
     }
 
     main {
-      max-width: 760px;
-      margin: 40px auto;
-      padding: 24px;
+      max-width: 850px;
+      margin: 30px auto;
+      padding: 16px;
     }
 
     .card {
-      background: white;
+      background: #fff;
       border-radius: 16px;
       padding: 28px;
       box-shadow: 0 6px 24px #0001;
@@ -28,20 +39,45 @@
 
     h1 {
       color: #164e63;
+      margin-top: 0;
     }
 
     h2 {
-      color: #172033;
+      margin-top: 28px;
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .box {
+      background: #f0fdfa;
+      border-left: 4px solid var(--teal);
+      padding: 14px;
+      margin: 14px 0;
+    }
+
+    .risk {
+      background: #fff7ed;
+      border-left-color: #ea580c;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 22px;
     }
 
     button {
-      background: #0f766e;
-      color: white;
       border: 0;
       border-radius: 8px;
-      padding: 12px 18px;
+      padding: 12px 16px;
+      background: var(--teal);
+      color: #fff;
       cursor: pointer;
-      margin-top: 12px;
+      font-size: 15px;
     }
 
     button:hover {
@@ -53,25 +89,54 @@
       cursor: default;
     }
 
-    .progress {
-      color: #64748b;
-      font-size: 14px;
-    }
-
-    .quiz {
-      border-top: 1px solid #e2e8f0;
-      margin-top: 28px;
-      padding-top: 20px;
+    button.secondary {
+      background: #475569;
     }
 
     label {
       display: block;
-      margin: 12px 0;
+      margin: 14px 0;
     }
 
     #feedback {
       font-weight: bold;
-      margin-top: 14px;
+      min-height: 22px;
+    }
+
+    a {
+      color: var(--teal);
+    }
+
+    .lesson-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .lesson-link {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      border: 1px solid #dbe4ee;
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+    }
+
+    .lesson-link:hover {
+      border-color: var(--teal);
+    }
+
+    .done {
+      color: #15803d;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    hr {
+      border: 0;
+      border-top: 1px solid #e2e8f0;
+      margin: 28px 0;
     }
   </style>
 </head>
@@ -79,96 +144,388 @@
 <body>
   <main>
     <div class="card">
-      <p class="progress" id="progress"></p>
-
-      <h1>SDP Campus Coach</h1>
-
-      <h2 id="title"></h2>
-
-      <p id="lesson"></p>
-
-      <button id="complete">Mark lesson complete</button>
-
-      <div class="quiz">
-        <h3>Knowledge check</h3>
-
-        <p>Which is the campus manager’s core responsibility?</p>
-
-        <label>
-          <input type="radio" name="answer" value="wrong">
-          Only teaching classes
-        </label>
-
-        <label>
-          <input type="radio" name="answer" value="right">
-          Coordinating people, evidence, quality and risks
-        </label>
-
-        <button id="check-answer">Check answer</button>
-
-        <p id="feedback"></p>
-      </div>
+      <div id="app"></div>
     </div>
   </main>
 
   <script>
-    const lesson = {
-      title: "What does a campus manager manage?",
-      text: "A campus manager coordinates people, learners, programmes, facilities, evidence, quality, reporting, and risks. Your job is to make sure the right work happens, by the right person, with evidence that proves it happened."
-    };
+    const lessons = [
+      {
+        title: "What does a campus manager manage?",
 
-    const progress = document.getElementById("progress");
-    const title = document.getElementById("title");
-    const lessonText = document.getElementById("lesson");
-    const completeButton = document.getElementById("complete");
-    const checkAnswerButton = document.getElementById("check-answer");
-    const feedback = document.getElementById("feedback");
+        body: `
+          <p>
+            A campus manager coordinates people, learners, programmes,
+            facilities, evidence, quality, reporting, and risks. Your job is
+            to make sure the right work happens, by the right person, with
+            evidence that proves it happened.
+          </p>
 
-    const completed =
-      localStorage.getItem("lesson-1-complete") === "true";
+          <div class="box">
+            <strong>Manager habit:</strong>
+            for every important activity, know the owner, deadline, evidence
+            and escalation path.
+          </div>
+        `,
 
-    title.textContent = lesson.title;
-    lessonText.textContent = lesson.text;
+        question:
+          "Which is the campus manager’s core responsibility?",
 
-    function updateProgress() {
-      if (localStorage.getItem("lesson-1-complete") === "true") {
-        progress.textContent = "Lesson 1 complete";
-        completeButton.textContent = "Completed";
-        completeButton.disabled = true;
-      } else {
-        progress.textContent = "Module 1 · Lesson 1";
+        answers: [
+          "Only teaching classes",
+          "Coordinating people, evidence, quality and risks"
+        ],
+
+        correct: 1,
+
+        explanation:
+          "A manager makes the whole campus operation work."
+      },
+
+      {
+        title: "SETA, QCTO and SAQA: who does what?",
+
+        body: `
+          <p>
+            Do not treat SETA and QCTO requirements as one interchangeable
+            rulebook.
+          </p>
+
+          <div class="box">
+            <strong>SAQA</strong>
+            <br>
+            Maintains the overall National Qualifications Framework and
+            supports national coordination.
+          </div>
+
+          <div class="box">
+            <strong>QCTO</strong>
+            <br>
+            Oversees the Occupational Qualifications Sub-Framework and quality
+            assures occupational qualifications and assessments.
+          </div>
+
+          <div class="box">
+            <strong>SETA</strong>
+            <br>
+            Works within a sector to support skills planning, employer
+            participation, workplace learning and funding. Processes can
+            differ between SETAs.
+          </div>
+
+          <p>
+            <strong>Manager’s rule:</strong>
+            identify the qualification, responsible authority, current rule,
+            evidence and owner.
+          </p>
+
+          <p>
+            <a
+              href="https://www.saqa.org.za/"
+              target="_blank"
+              rel="noopener"
+            >
+              SAQA
+            </a>
+            ·
+            <a
+              href="https://www.qcto.org.za/"
+              target="_blank"
+              rel="noopener"
+            >
+              QCTO
+            </a>
+          </p>
+        `,
+
+        question:
+          "Which question should you ask first when a compliance issue arises?",
+
+        answers: [
+          "Which organisation handled it last year?",
+          "Which qualification and current rule apply?"
+        ],
+
+        correct: 1,
+
+        explanation:
+          "Start with the qualification and current rule, not memory."
+      },
+
+      {
+        title: "Accreditation and readiness",
+
+        body: `
+          <p>
+            Accreditation is not only a certificate or application. A campus
+            must show that it is legally, operationally, financially and
+            practically ready for the specific programme.
+          </p>
+
+          <div class="box">
+            <strong>Institutional compliance</strong>
+            <p>
+              Legal registration, applicable tax compliance, financial
+              sustainability, governance and policies.
+            </p>
+          </div>
+
+          <div class="box">
+            <strong>Programme delivery readiness</strong>
+            <p>
+              Suitable premises, current lease or ownership proof, learning
+              resources, equipment, staff capacity, learner support and
+              delivery processes.
+            </p>
+          </div>
+
+          <div class="box risk">
+            <strong>Audit risks:</strong>
+            expired records, mismatched equipment, policies not followed,
+            missing learner evidence, or applying for a programme the campus
+            cannot deliver.
+          </div>
+
+          <p>
+            Use the
+            <a
+              href="https://www.qcto.org.za/for-skills-development-providers.html"
+              target="_blank"
+              rel="noopener"
+            >
+              current QCTO provider guidance
+            </a>
+            for the exact programme.
+          </p>
+        `,
+
+        question:
+          "Equipment does not match the curriculum. What is the best response?",
+
+        answers: [
+          "Apply anyway and explain the gap during the audit",
+          "Record the gap, assign an owner and resolve it before delivery"
+        ],
+
+        correct: 1,
+
+        explanation:
+          "Readiness gaps need owners, evidence and action before delivery."
+      },
+
+      {
+        title: "The learner journey",
+
+        body: `
+          <p>
+            The learner journey must be planned, supported, evidenced and
+            reviewed from first contact through completion or exit.
+          </p>
+
+          <div class="box">
+            <strong>Stages:</strong>
+            recruitment and selection, enrolment and induction, delivery and
+            attendance, support and intervention, assessment and moderation,
+            completion, certification and exit.
+          </div>
+
+          <div class="box risk">
+            <strong>Manager’s rule:</strong>
+            enrolment or attendance alone does not prove success. Track
+            progression, competence, completion, certification and exit
+            outcomes separately.
+          </div>
+
+          <p>
+            Keep identity and entry evidence, programme details, attendance,
+            support actions, assessment and moderation records, results,
+            certification and exit outcome.
+          </p>
+        `,
+
+        question:
+          "A learner has good attendance but missing assessment evidence and unresolved support issues. What should happen?",
+
+        answers: [
+          "Mark the learner complete because attendance is good",
+          "Record the gaps, assign follow-up actions and verify evidence before confirming completion"
+        ],
+
+        correct: 1,
+
+        explanation:
+          "Completion must be supported by evidence, follow-up and applicable rules."
+      }
+    ];
+
+    let currentLesson = Number(
+      localStorage.getItem("current-lesson") || 0
+    );
+
+    const app = document.getElementById("app");
+
+    function isComplete(index) {
+      return localStorage.getItem(
+        "lesson-" + (index + 1) + "-complete"
+      ) === "true";
+    }
+
+    function renderHome() {
+      app.innerHTML = `
+        <p class="eyebrow">
+          Personal learning coach · Campus Manager Foundations
+        </p>
+
+        <h1>SDP Campus Coach</h1>
+
+        <p>
+          Learn the operating view one lesson at a time. Your progress is
+          saved in this browser.
+        </p>
+
+        <div class="lesson-list">
+          ${lessons.map((lesson, index) => `
+            <div
+              class="lesson-link"
+              onclick="openLesson(${index})"
+            >
+              <span>
+                <strong>Lesson ${index + 1}:</strong>
+                ${lesson.title}
+              </span>
+
+              <span class="done">
+                ${isComplete(index) ? "Complete" : "Start"}
+              </span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function openLesson(index) {
+      currentLesson = index;
+      localStorage.setItem("current-lesson", index);
+      renderLesson();
+    }
+
+    function renderLesson() {
+      const lesson = lessons[currentLesson];
+      const complete = isComplete(currentLesson);
+
+      app.innerHTML = `
+        <p class="eyebrow">
+          Module 1 · Lesson ${currentLesson + 1} of ${lessons.length}
+        </p>
+
+        <h1>${lesson.title}</h1>
+
+        ${lesson.body}
+
+        <button id="complete" ${complete ? "disabled" : ""}>
+          ${complete ? "Completed" : "Mark lesson complete"}
+        </button>
+
+        <hr>
+
+        <h2>Knowledge check</h2>
+
+        <p>${lesson.question}</p>
+
+        ${lesson.answers.map((answer, index) => `
+          <label>
+            <input
+              type="radio"
+              name="answer"
+              value="${index}"
+            >
+            ${answer}
+          </label>
+        `).join("")}
+
+        <button id="check">Check answer</button>
+
+        <p id="feedback"></p>
+
+        <div class="actions">
+          <button class="secondary" id="home">
+            All lessons
+          </button>
+
+          ${
+            currentLesson > 0
+              ? `<button class="secondary" id="previous">Previous</button>`
+              : ""
+          }
+
+          ${
+            currentLesson < lessons.length - 1
+              ? `<button id="next">Next lesson</button>`
+              : ""
+          }
+        </div>
+      `;
+
+      document.getElementById("complete").onclick = function () {
+        localStorage.setItem(
+          "lesson-" + (currentLesson + 1) + "-complete",
+          "true"
+        );
+
+        renderLesson();
+      };
+
+      document.getElementById("check").onclick = function () {
+        const selected = document.querySelector(
+          'input[name="answer"]:checked'
+        );
+
+        const feedback = document.getElementById("feedback");
+
+        if (!selected) {
+          feedback.textContent = "Please select an answer first.";
+          feedback.style.color = "#b45309";
+          return;
+        }
+
+        if (Number(selected.value) === lesson.correct) {
+          feedback.textContent =
+            "Correct. " + lesson.explanation;
+
+          feedback.style.color = "#15803d";
+
+          localStorage.setItem(
+            "lesson-" + (currentLesson + 1) + "-quiz",
+            "passed"
+          );
+        } else {
+          feedback.textContent =
+            "Try again. Read the manager rule above.";
+
+          feedback.style.color = "#b91c1c";
+        }
+      };
+
+      document.getElementById("home").onclick = renderHome;
+
+      const previousButton = document.getElementById("previous");
+
+      if (previousButton) {
+        previousButton.onclick = function () {
+          openLesson(currentLesson - 1);
+        };
+      }
+
+      const nextButton = document.getElementById("next");
+
+      if (nextButton) {
+        nextButton.onclick = function () {
+          openLesson(currentLesson + 1);
+        };
       }
     }
 
-    completeButton.addEventListener("click", function () {
-      localStorage.setItem("lesson-1-complete", "true");
-      updateProgress();
-    });
-
-    checkAnswerButton.addEventListener("click", function () {
-      const answer = document.querySelector(
-        'input[name="answer"]:checked'
-      );
-
-      if (!answer) {
-        feedback.textContent = "Please select an answer first.";
-        feedback.style.color = "#b45309";
-        return;
-      }
-
-      if (answer.value === "right") {
-        feedback.textContent =
-          "Correct. A manager makes the whole campus operation work.";
-        feedback.style.color = "#15803d";
-        localStorage.setItem("lesson-1-quiz", "passed");
-      } else {
-        feedback.textContent =
-          "Try again. Think beyond teaching: people, evidence, quality and risks.";
-        feedback.style.color = "#b91c1c";
-      }
-    });
-
-    updateProgress();
+    renderHome();
   </script>
 </body>
 </html>
